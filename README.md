@@ -1,0 +1,1 @@
+This package helps you playing Clue. If you want for Clue to still be fun, don't use this.
