@@ -2,7 +2,7 @@ from itertools import product
 from typing import Tuple
 
 from boolean_formula import *
-from visitor import visitor
+import visitor
 
 
 class PushDownNegationsVisitor:
@@ -13,23 +13,23 @@ class PushDownNegationsVisitor:
         This is the first step in the conversion to CNF."""
         pass
 
-    @visit.when(Conjunction)
+    @visitor.when(Conjunction)
     def visit(self, formula: Conjunction, carry: bool) -> BooleanFormula:
         return Disjunction(
             self.visit(formula.left, carry), self.visit(formula.right, carry)
         )
 
-    @visit.when(Disjunction)
+    @visitor.when(Disjunction)
     def visit(self, formula: Disjunction, carry: bool) -> BooleanFormula:
         return Conjunction(
             self.visit(formula.left, carry), self.visit(formula.right, carry)
         )
 
-    @visit.when(Negation)
+    @visitor.when(Negation)
     def visit(self, formula: Negation, carry: bool) -> BooleanFormula:
         return self.visit(formula.formula, not carry)
 
-    @visit.when(Variable)
+    @visitor.when(Variable)
     def visit(self, formula: Variable, carry: bool) -> BooleanFormula:
         if carry:
             return Negation(formula)
@@ -49,11 +49,11 @@ class PullUpConjunctionsVisitor:
         This is the second step in the conversion to CNF."""
         pass
 
-    @visit.when(Conjunction)
+    @visitor.when(Conjunction)
     def visit(self, formula: Conjunction) -> Tuple[BooleanFormula, bool]:
         return Conjunction(self.visit(formula.left), self.visit(formula.right)), True
 
-    @visit.when(Disjunction)
+    @visitor.when(Disjunction)
     def visit(self, formula: Disjunction) -> Tuple[BooleanFormula, bool]:
         cnf_left, is_left_conjunct = self.visit(formula.left)
         cnf_right, is_right_conjunct = self.visit(formula.right)
@@ -74,10 +74,19 @@ class PullUpConjunctionsVisitor:
         else:
             return Disjunction(cnf_left, cnf_right), False
 
-    @visit.when(Negation)
+    @visitor.when(Negation)
     def visit(self, formula: Negation) -> Tuple[BooleanFormula, bool]:
         return formula, False
 
-    @visit.when(Variable)
+    @visitor.when(Variable)
     def visit(self, formula: Variable) -> Tuple[BooleanFormula, bool]:
         return formula, False
+
+
+def convert_to_cnf(formula: BooleanFormula) -> BooleanFormula:
+    """
+    Returns a formula in CNF.
+    """
+    return PullUpConjunctionsVisitor().visit(PushDownNegationsVisitor().visit(formula))[
+        0
+    ]
