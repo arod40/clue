@@ -5,25 +5,33 @@ from typing import List, Optional, Tuple
 @dataclass
 class Variable:
     name: str
-    idx: int
+    value: Optional[bool] = None
+
 
 @dataclass
 class Literal:
     variable: Variable
     isneg: bool
 
+
 @dataclass
 class Assignment:
     variable: Variable
     value: bool
 
+
 @dataclass
 class Clause:
     literals: List[Literal]
 
+
 class CNF:
     def __init__(self, clauses: List[Clause]):
         self.clauses = clauses
+        self.variables = {}
+        for clause in clauses:
+            for literal in clause.literals:
+                self.variables[literal.variable.idx] = literal.variable
 
     @staticmethod
     def parse(string: str):
@@ -48,10 +56,8 @@ class CNF:
         """
         pass
 
-
     def satisfiable(self) -> Tuple[bool, Optional[List[Assignment]]]:
         """
         Returns True if this CNF object is satisfiable, False otherwise.
         """
         pass
-
